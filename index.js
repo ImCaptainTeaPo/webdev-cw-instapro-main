@@ -85,6 +85,7 @@ export const goToPage = (newPage, data) => {
 
 const renderApp = () => {
   const appEl = document.getElementById("app");
+
   if (page === LOADING_PAGE) {
     return renderLoadingPageComponent({
       appEl,
@@ -110,9 +111,31 @@ const renderApp = () => {
     return renderAddPostPageComponent({
       appEl,
       onAddPostClick({ description, imageUrl }) {
-        // @TODO: реализовать добавление поста в API
-        console.log("Добавляю пост...", { description, imageUrl });
-        goToPage(POSTS_PAGE);
+        const token = getToken();
+        fetch("https://webdev-hw-api.vercel.app/api/v1/prod/instapro", {
+          method: "POST",
+          headers: {
+            Authorization: token,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            description,
+            imageUrl,
+          }),
+        })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error("Ошибка при добавлении поста");
+            }
+            return response.json();
+          })
+          .then(() => {
+            goToPage(POSTS_PAGE);
+          })
+          .catch((error) => {
+            console.warn(error);
+            alert("Не удалось добавить пост");
+          });
       },
     });
   }
@@ -124,7 +147,7 @@ const renderApp = () => {
   }
 
   if (page === USER_POSTS_PAGE) {
-    // @TODO: реализовать страницу с фотографиями отдельного пользвателя
+    // @TODO: реализовать страницу с фотографиями отдельного пользователя
     appEl.innerHTML = "Здесь будет страница фотографий пользователя";
     return;
   }
