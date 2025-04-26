@@ -116,7 +116,6 @@ const renderApp = () => {
           method: "POST",
           headers: {
             Authorization: token,
-            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             description,
