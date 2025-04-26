@@ -1,13 +1,6 @@
 import { getPosts, postsHost, getUserPosts } from "./api.js";
 import { renderAddPostPageComponent } from "./components/add-post-page-component.js";
 import { renderAuthPageComponent } from "./components/auth-page-component.js";
-import {
-  ADD_POSTS_PAGE,
-  AUTH_PAGE,
-  LOADING_PAGE,
-  POSTS_PAGE,
-  USER_POSTS_PAGE,
-} from "./routes.js";
 import { renderPostsPageComponent } from "./components/posts-page-component.js";
 import { renderLoadingPageComponent } from "./components/loading-page-component.js";
 import {
@@ -15,15 +8,19 @@ import {
   removeUserFromLocalStorage,
   saveUserToLocalStorage,
 } from "./helpers.js";
+import {
+  ADD_POSTS_PAGE,
+  AUTH_PAGE,
+  LOADING_PAGE,
+  POSTS_PAGE,
+  USER_POSTS_PAGE,
+} from "./routes.js";
 
 export let user = getUserFromLocalStorage();
 export let page = null;
 export let posts = [];
 
-const getToken = () => {
-  const token = user ? `Bearer ${user.token}` : undefined;
-  return token;
-};
+const getToken = () => (user ? `Bearer ${user.token}` : undefined);
 
 export const logout = () => {
   user = null;
@@ -31,12 +28,9 @@ export const logout = () => {
   goToPage(POSTS_PAGE);
 };
 
-/**
- * Включает страницу приложения
- */
 export const goToPage = (newPage, data) => {
   if (
-    [
+    ![
       POSTS_PAGE,
       AUTH_PAGE,
       ADD_POSTS_PAGE,
@@ -44,61 +38,65 @@ export const goToPage = (newPage, data) => {
       LOADING_PAGE,
     ].includes(newPage)
   ) {
-    if (newPage === ADD_POSTS_PAGE) {
-      page = user ? ADD_POSTS_PAGE : AUTH_PAGE;
-      return renderApp();
-    }
+    throw new Error("Страницы не существует");
+  }
 
-    if (newPage === POSTS_PAGE) {
-      page = LOADING_PAGE;
-      renderApp();
+  if (newPage === ADD_POSTS_PAGE) {
+    page = user ? ADD_POSTS_PAGE : AUTH_PAGE;
+    return renderApp();
+  }
 
-      return getPosts({ token: getToken() })
-        .then((newPosts) => {
-          page = POSTS_PAGE;
-          posts = newPosts;
-          renderApp();
-        })
-        .catch((error) => {
-          console.error(error);
-          goToPage(POSTS_PAGE);
-        });
-    }
-
-    if (newPage === USER_POSTS_PAGE) {
-      page = LOADING_PAGE;
-      renderApp();
-
-      return getUserPosts({ userId: data.userId, token: getToken() })
-        .then((newPosts) => {
-          page = USER_POSTS_PAGE;
-          posts = newPosts;
-          renderApp();
-        })
-        .catch((error) => {
-          console.error(error);
-          goToPage(POSTS_PAGE);
-        });
-    }
-
-    page = newPage;
-    renderApp();
-
+  if (newPage === POSTS_PAGE) {
+    loadPosts();
     return;
   }
 
-  throw new Error("страницы не существует");
+  if (newPage === USER_POSTS_PAGE) {
+    loadUserPosts(data.userId);
+    return;
+  }
+
+  page = newPage;
+  renderApp();
+};
+
+const loadPosts = () => {
+  page = LOADING_PAGE;
+  renderApp();
+  getPosts({ token: getToken() })
+    .then((newPosts) => {
+      posts = newPosts;
+      page = POSTS_PAGE;
+      renderApp();
+    })
+    .catch((error) => {
+      console.error(error);
+      page = POSTS_PAGE;
+      renderApp();
+    });
+};
+
+const loadUserPosts = (userId) => {
+  page = LOADING_PAGE;
+  renderApp();
+  getUserPosts({ userId, token: getToken() })
+    .then((newPosts) => {
+      posts = newPosts;
+      page = USER_POSTS_PAGE;
+      renderApp();
+    })
+    .catch((error) => {
+      console.error(error);
+      page = POSTS_PAGE;
+      renderApp();
+    });
 };
 
 const renderApp = () => {
   const appEl = document.getElementById("app");
 
   if (page === LOADING_PAGE) {
-    return renderLoadingPageComponent({
-      appEl,
-      user,
-      goToPage,
-    });
+    return renderLoadingPageComponent({ appEl, user, goToPage });
   }
 
   if (page === AUTH_PAGE) {
@@ -109,25 +107,18 @@ const renderApp = () => {
         saveUserToLocalStorage(user);
         goToPage(POSTS_PAGE);
       },
-      user,
-      goToPage,
     });
   }
 
   if (page === ADD_POSTS_PAGE) {
     return renderAddPostPageComponent({
       appEl,
-      onAddPostClick({ description, imageUrl }) {
+      onAddPostClick: ({ description, imageUrl }) => {
         const token = getToken();
         fetch(postsHost, {
           method: "POST",
-          headers: {
-            Authorization: token,
-          },
-          body: JSON.stringify({
-            description,
-            imageUrl,
-          }),
+          headers: { Authorization: token },
+          body: JSON.stringify({ description, imageUrl }),
         })
           .then((response) => {
             if (!response.ok) {
@@ -135,16 +126,7 @@ const renderApp = () => {
             }
             return response.json();
           })
-          .then(() => {
-            page = LOADING_PAGE;
-            renderApp();
-
-            return getPosts({ token: getToken() }).then((newPosts) => {
-              page = POSTS_PAGE;
-              posts = newPosts;
-              renderApp();
-            });
-          })
+          .then(() => loadPosts())
           .catch((error) => {
             console.warn(error);
             alert("Не удалось добавить пост");
@@ -153,10 +135,8 @@ const renderApp = () => {
     });
   }
 
-  if (page === POSTS_PAGE || page === USER_POSTS_PAGE) {
-    return renderPostsPageComponent({
-      appEl,
-    });
+  if ([POSTS_PAGE, USER_POSTS_PAGE].includes(page)) {
+    return renderPostsPageComponent({ appEl });
   }
 };
 
