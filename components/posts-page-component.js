@@ -71,6 +71,7 @@ export function renderPostsPageComponent({ appEl }) {
     }
   }
 
+  // Клики по лайкам
   for (let likeButton of document.querySelectorAll(".like-button")) {
     likeButton.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -89,6 +90,8 @@ export function renderPostsPageComponent({ appEl }) {
         isLiked,
       })
         .then(() => {
+          likeButton.dataset.isLiked = (!isLiked).toString();
+
           goToPage(page);
         })
         .catch((error) => {
