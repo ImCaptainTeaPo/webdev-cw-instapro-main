@@ -23,7 +23,7 @@ export function renderPostsPageComponent({ appEl }) {
           <button class="like-button">
             <img src="./assets/images/${
               post.isLiked ? "like-active" : "like-not-active"
-            }.svg">
+            }.svg" class="like-icon">
           </button>
           <p class="post-likes-text">
             Нравится: <strong>${post.likes.length}</strong>
@@ -81,6 +81,9 @@ export function renderPostsPageComponent({ appEl }) {
       const postEl = likeButton.closest(".post");
       const postId = postEl.dataset.postId;
       const post = posts.find((p) => p.id === postId);
+      const likeImage = likeButton.querySelector(".like-icon");
+
+      likeImage.classList.add("like-shake");
 
       toggleLike({
         postId,
@@ -95,7 +98,6 @@ export function renderPostsPageComponent({ appEl }) {
             post.likes.pop();
           }
 
-          const likeImage = likeButton.querySelector("img");
           likeImage.src = `./assets/images/${
             post.isLiked ? "like-active" : "like-not-active"
           }.svg`;
@@ -106,6 +108,11 @@ export function renderPostsPageComponent({ appEl }) {
         .catch((error) => {
           console.warn(error);
           alert("Не удалось обновить лайк. Попробуйте позже.");
+        })
+        .finally(() => {
+          setTimeout(() => {
+            likeImage.classList.remove("like-shake");
+          }, 600);
         });
     });
   });
