@@ -1,6 +1,6 @@
-import { USER_POSTS_PAGE } from "../routes.js";
+import { USER_POSTS_PAGE, POSTS_PAGE } from "../routes.js";
 import { renderHeaderComponent } from "./header-component.js";
-import { posts, goToPage } from "../index.js";
+import { posts, goToPage, page } from "../index.js";
 import { formatDistanceToNow } from "https://cdn.skypack.dev/date-fns";
 import { ru } from "https://cdn.skypack.dev/date-fns/locale";
 
@@ -57,12 +57,13 @@ export function renderPostsPageComponent({ appEl }) {
     element: document.querySelector(".header-container"),
   });
 
-  // Ставим обработчики кликов на имена пользователей
-  for (let userEl of document.querySelectorAll(".post-header")) {
-    userEl.addEventListener("click", () => {
-      goToPage(USER_POSTS_PAGE, {
-        userId: userEl.dataset.userId,
+  if (page === POSTS_PAGE) {
+    for (let userEl of document.querySelectorAll(".post-header")) {
+      userEl.addEventListener("click", () => {
+        goToPage(USER_POSTS_PAGE, {
+          userId: userEl.dataset.userId,
+        });
       });
-    });
+    }
   }
 }

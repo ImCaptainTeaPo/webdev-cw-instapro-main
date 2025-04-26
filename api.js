@@ -1,5 +1,3 @@
-// Замени на свой, чтобы получить независимый от других набор данных.
-// "боевая" версия инстапро лежит в ключе prod
 const personalKey = "instapro-semen";
 const baseHost = "https://webdev-hw-api.vercel.app";
 const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`;
@@ -15,7 +13,27 @@ export function getPosts({ token }) {
       if (response.status === 401) {
         throw new Error("Нет авторизации");
       }
+      return response.json();
+    })
+    .then((data) => {
+      return data.posts;
+    });
+}
 
+export function getUserPosts({ userId, token }) {
+  return fetch(
+    `${baseHost}/api/v1/${personalKey}/instapro/user-posts/${userId}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: token,
+      },
+    }
+  )
+    .then((response) => {
+      if (response.status === 401) {
+        throw new Error("Нет авторизации");
+      }
       return response.json();
     })
     .then((data) => {
@@ -55,7 +73,6 @@ export function loginUser({ login, password }) {
   });
 }
 
-// Загружает картинку в облако, возвращает url загруженной картинки
 export function uploadImage({ file }) {
   const data = new FormData();
   data.append("file", file);

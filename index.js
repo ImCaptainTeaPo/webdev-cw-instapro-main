@@ -1,4 +1,4 @@
-import { getPosts, postsHost } from "./api.js";
+import { getPosts, postsHost, getUserPosts } from "./api.js";
 import { renderAddPostPageComponent } from "./components/add-post-page-component.js";
 import { renderAuthPageComponent } from "./components/auth-page-component.js";
 import {
@@ -45,7 +45,6 @@ export const goToPage = (newPage, data) => {
     ].includes(newPage)
   ) {
     if (newPage === ADD_POSTS_PAGE) {
-      /* Если пользователь не авторизован, то отправляем его на страницу авторизации перед добавлением поста */
       page = user ? ADD_POSTS_PAGE : AUTH_PAGE;
       return renderApp();
     }
@@ -67,11 +66,19 @@ export const goToPage = (newPage, data) => {
     }
 
     if (newPage === USER_POSTS_PAGE) {
-      // @@TODO: реализовать получение постов юзера из API
-      console.log("Открываю страницу пользователя: ", data.userId);
-      page = USER_POSTS_PAGE;
-      posts = [];
-      return renderApp();
+      page = LOADING_PAGE;
+      renderApp();
+
+      return getUserPosts({ userId: data.userId, token: getToken() })
+        .then((newPosts) => {
+          page = USER_POSTS_PAGE;
+          posts = newPosts;
+          renderApp();
+        })
+        .catch((error) => {
+          console.error(error);
+          goToPage(POSTS_PAGE);
+        });
     }
 
     page = newPage;
@@ -129,7 +136,6 @@ const renderApp = () => {
             return response.json();
           })
           .then(() => {
-            // После добавления поста перезагружаем свежие посты с сервера:
             page = LOADING_PAGE;
             renderApp();
 
@@ -147,16 +153,10 @@ const renderApp = () => {
     });
   }
 
-  if (page === POSTS_PAGE) {
+  if (page === POSTS_PAGE || page === USER_POSTS_PAGE) {
     return renderPostsPageComponent({
       appEl,
     });
-  }
-
-  if (page === USER_POSTS_PAGE) {
-    // @TODO: реализовать страницу с фотографиями отдельного пользователя
-    appEl.innerHTML = "Здесь будет страница фотографий пользователя";
-    return;
   }
 };
 
