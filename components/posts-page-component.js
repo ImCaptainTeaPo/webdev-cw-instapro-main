@@ -11,7 +11,7 @@ export function renderPostsPageComponent({ appEl }) {
   const postsHtml = posts
     .map((post) => {
       return `
-      <li class="post">
+      <li class="post" data-post-id="${post.id}">
         <div class="post-header" data-user-id="${post.user.id}">
           <img src="${post.user.imageUrl}" class="post-header__user-image">
           <p class="post-header__user-name">${post.user.name}</p>
@@ -20,9 +20,7 @@ export function renderPostsPageComponent({ appEl }) {
           <img class="post-image" src="${post.imageUrl}">
         </div>
         <div class="post-likes">
-          <button data-post-id="${post.id}" data-is-liked="${
-        post.isLiked
-      }" class="like-button">
+          <button class="like-button">
             <img src="./assets/images/${
               post.isLiked ? "like-active" : "like-not-active"
             }.svg">
@@ -60,19 +58,18 @@ export function renderPostsPageComponent({ appEl }) {
     element: document.querySelector(".header-container"),
   });
 
-  // Клики по имени пользователя (переход на страницу пользователя)
+  // Переход на страницу пользователя
   if (page === POSTS_PAGE) {
-    for (let userEl of document.querySelectorAll(".post-header")) {
+    document.querySelectorAll(".post-header").forEach((userEl) => {
       userEl.addEventListener("click", () => {
         goToPage(USER_POSTS_PAGE, {
           userId: userEl.dataset.userId,
         });
       });
-    }
+    });
   }
 
-  // Клики по лайкам
-  for (let likeButton of document.querySelectorAll(".like-button")) {
+  document.querySelectorAll(".like-button").forEach((likeButton) => {
     likeButton.addEventListener("click", (event) => {
       event.stopPropagation();
 
@@ -81,23 +78,35 @@ export function renderPostsPageComponent({ appEl }) {
         return;
       }
 
-      const postId = likeButton.dataset.postId;
-      const isLiked = likeButton.dataset.isLiked === "true";
+      const postEl = likeButton.closest(".post");
+      const postId = postEl.dataset.postId;
+      const post = posts.find((p) => p.id === postId);
 
       toggleLike({
         postId,
         token: `Bearer ${user.token}`,
-        isLiked,
+        isLiked: post.isLiked,
       })
         .then(() => {
-          likeButton.dataset.isLiked = (!isLiked).toString();
+          post.isLiked = !post.isLiked;
+          if (post.isLiked) {
+            post.likes.push({ name: user.name });
+          } else {
+            post.likes.pop();
+          }
 
-          goToPage(page);
+          const likeImage = likeButton.querySelector("img");
+          likeImage.src = `./assets/images/${
+            post.isLiked ? "like-active" : "like-not-active"
+          }.svg`;
+
+          const likesText = postEl.querySelector(".post-likes-text strong");
+          likesText.textContent = post.likes.length;
         })
         .catch((error) => {
           console.warn(error);
-          alert("Не удалось поставить лайк. Попробуйте позже.");
+          alert("Не удалось обновить лайк. Попробуйте позже.");
         });
     });
-  }
+  });
 }
