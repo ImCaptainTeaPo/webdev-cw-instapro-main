@@ -67,3 +67,5 @@ export function uploadImage({ file }) {
     return response.json();
   });
 }
+
+export { postsHost };

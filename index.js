@@ -1,4 +1,4 @@
-import { getPosts } from "./api.js";
+import { getPosts, postsHost } from "./api.js";
 import { renderAddPostPageComponent } from "./components/add-post-page-component.js";
 import { renderAuthPageComponent } from "./components/auth-page-component.js";
 import {
@@ -112,7 +112,7 @@ const renderApp = () => {
       appEl,
       onAddPostClick({ description, imageUrl }) {
         const token = getToken();
-        fetch("https://webdev-hw-api.vercel.app/api/v1/prod/instapro", {
+        fetch(postsHost, {
           method: "POST",
           headers: {
             Authorization: token,
@@ -129,7 +129,15 @@ const renderApp = () => {
             return response.json();
           })
           .then(() => {
-            goToPage(POSTS_PAGE);
+            // После добавления поста перезагружаем свежие посты с сервера:
+            page = LOADING_PAGE;
+            renderApp();
+
+            return getPosts({ token: getToken() }).then((newPosts) => {
+              page = POSTS_PAGE;
+              posts = newPosts;
+              renderApp();
+            });
           })
           .catch((error) => {
             console.warn(error);
