@@ -42,7 +42,7 @@ export function getUserPosts({ userId, token }) {
 }
 
 export function registerUser({ login, password, name, imageUrl }) {
-  return fetch(baseHost + "/api/user", {
+  return fetch(`${baseHost}/api/user`, {
     method: "POST",
     body: JSON.stringify({
       login,
@@ -59,7 +59,7 @@ export function registerUser({ login, password, name, imageUrl }) {
 }
 
 export function loginUser({ login, password }) {
-  return fetch(baseHost + "/api/user/login", {
+  return fetch(`${baseHost}/api/user/login`, {
     method: "POST",
     body: JSON.stringify({
       login,
@@ -77,10 +77,28 @@ export function uploadImage({ file }) {
   const data = new FormData();
   data.append("file", file);
 
-  return fetch(baseHost + "/api/upload/image", {
+  return fetch(`${baseHost}/api/upload/image`, {
     method: "POST",
     body: data,
   }).then((response) => {
+    return response.json();
+  });
+}
+
+export function toggleLike({ postId, token, isLiked }) {
+  const url = isLiked
+    ? `${baseHost}/api/v1/${personalKey}/instapro/${postId}/dislike`
+    : `${baseHost}/api/v1/${personalKey}/instapro/${postId}/like`;
+
+  return fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: token,
+    },
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error("Ошибка при обновлении лайка");
+    }
     return response.json();
   });
 }

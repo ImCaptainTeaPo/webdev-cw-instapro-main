@@ -1,8 +1,9 @@
 import { USER_POSTS_PAGE, POSTS_PAGE } from "../routes.js";
 import { renderHeaderComponent } from "./header-component.js";
-import { posts, goToPage, page } from "../index.js";
+import { posts, goToPage, page, user } from "../index.js";
 import { formatDistanceToNow } from "https://cdn.skypack.dev/date-fns";
 import { ru } from "https://cdn.skypack.dev/date-fns/locale";
+import { toggleLike } from "../api.js";
 
 export function renderPostsPageComponent({ appEl }) {
   console.log("Актуальный список постов:", posts);
@@ -19,7 +20,9 @@ export function renderPostsPageComponent({ appEl }) {
           <img class="post-image" src="${post.imageUrl}">
         </div>
         <div class="post-likes">
-          <button data-post-id="${post.id}" class="like-button">
+          <button data-post-id="${post.id}" data-is-liked="${
+        post.isLiked
+      }" class="like-button">
             <img src="./assets/images/${
               post.isLiked ? "like-active" : "like-not-active"
             }.svg">
@@ -57,6 +60,7 @@ export function renderPostsPageComponent({ appEl }) {
     element: document.querySelector(".header-container"),
   });
 
+  // Клики по имени пользователя (переход на страницу пользователя)
   if (page === POSTS_PAGE) {
     for (let userEl of document.querySelectorAll(".post-header")) {
       userEl.addEventListener("click", () => {
@@ -65,5 +69,35 @@ export function renderPostsPageComponent({ appEl }) {
         });
       });
     }
+  }
+
+  // Клики по лайкам
+  for (let likeButton of document.querySelectorAll(".like-button")) {
+    likeButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+
+      if (!user) {
+        alert("Только авторизованные пользователи могут ставить лайки");
+        return;
+      }
+
+      const postId = likeButton.dataset.postId;
+      const isLiked = likeButton.dataset.isLiked === "true";
+
+      toggleLike({
+        postId,
+        token: `Bearer ${user.token}`,
+        isLiked,
+      })
+        .then(() => {
+          likeButton.dataset.isLiked = (!isLiked).toString();
+
+          goToPage(page);
+        })
+        .catch((error) => {
+          console.warn(error);
+          alert("Не удалось поставить лайк. Попробуйте позже.");
+        });
+    });
   }
 }
