@@ -83,6 +83,8 @@ export function renderPostsPageComponent({ appEl }) {
       const post = posts.find((p) => p.id === postId);
       const likeImage = likeButton.querySelector(".like-icon");
 
+      likeButton.disabled = true;
+
       likeImage.classList.add("like-shake");
 
       toggleLike({
@@ -112,6 +114,7 @@ export function renderPostsPageComponent({ appEl }) {
         .finally(() => {
           setTimeout(() => {
             likeImage.classList.remove("like-shake");
+            likeButton.disabled = false;
           }, 600);
         });
     });
