@@ -85,4 +85,18 @@ export function uploadImage({ file }) {
   });
 }
 
+export function toggleLike({ postId, token, isLiked }) {
+  return fetch(`${postsHost}/${postId}/like`, {
+    method: isLiked ? "DELETE" : "POST",
+    headers: {
+      Authorization: token,
+    },
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error("Ошибка при обновлении лайка");
+    }
+    return response.json();
+  });
+}
+
 export { postsHost };
