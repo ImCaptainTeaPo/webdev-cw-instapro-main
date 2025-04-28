@@ -5,6 +5,12 @@ import { formatDistanceToNow } from "https://cdn.skypack.dev/date-fns";
 import { ru } from "https://cdn.skypack.dev/date-fns/locale";
 import { toggleLike } from "../api.js";
 
+function sanitizeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
 export function renderPostsPageComponent({ appEl }) {
   console.log("Актуальный список постов:", posts);
 
@@ -28,7 +34,9 @@ export function renderPostsPageComponent({ appEl }) {
         </p>
       </div>
       <p class="post-text">
-        <span class="user-name">${post.user.name}</span> ${post.description}
+        <span class="user-name">${post.user.name}</span> ${sanitizeHtml(
+    post.description
+  )}
       </p>
       <p class="post-date">
         ${formatDistanceToNow(new Date(post.createdAt), {
