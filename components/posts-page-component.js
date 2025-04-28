@@ -12,8 +12,6 @@ function sanitizeHtml(text) {
 }
 
 export function renderPostsPageComponent({ appEl }) {
-  console.log("Актуальный список постов:", posts);
-
   const createPostHtml = (post) => `
     <li class="post" data-post-id="${post.id}">
       <div class="post-header" data-user-id="${post.user.id}">
