@@ -16,7 +16,7 @@ export function renderPostsPageComponent({ appEl }) {
     <li class="post" data-post-id="${post.id}">
       <div class="post-header" data-user-id="${post.user.id}">
         <img src="${post.user.imageUrl}" class="post-header__user-image">
-        <p class="post-header__user-name">${post.user.name}</p>
+        <p class="post-header__user-name">${sanitizeHtml(post.user.name)}</p>
       </div>
       <div class="post-image-container">
         <img class="post-image" src="${post.imageUrl}">
@@ -32,9 +32,9 @@ export function renderPostsPageComponent({ appEl }) {
         </p>
       </div>
       <p class="post-text">
-        <span class="user-name">${post.user.name}</span> ${sanitizeHtml(
-    post.description
-  )}
+        <span class="user-name">${sanitizeHtml(
+          post.user.name
+        )}</span> ${sanitizeHtml(post.description)}
       </p>
       <p class="post-date">
         ${formatDistanceToNow(new Date(post.createdAt), {
