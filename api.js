@@ -2,105 +2,62 @@ const personalKey = "instapro-semen";
 const baseHost = "https://webdev-hw-api.vercel.app";
 const postsHost = `${baseHost}/api/v1/${personalKey}/instapro`;
 
-export function getPosts({ token }) {
-  return fetch(postsHost, {
+const request = async (url, options) => {
+  const response = await fetch(url, options);
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const errorMessage = data?.error || "Ошибка при запросе";
+    throw new Error(errorMessage);
+  }
+
+  return data;
+};
+
+export const getPosts = ({ token }) =>
+  request(postsHost, {
     method: "GET",
-    headers: {
-      Authorization: token,
-    },
-  })
-    .then((response) => {
-      if (response.status === 401) {
-        throw new Error("Нет авторизации");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      return data.posts;
-    });
-}
+    headers: { Authorization: token },
+  }).then((data) => data.posts);
 
-export function getUserPosts({ userId, token }) {
-  return fetch(
-    `${baseHost}/api/v1/${personalKey}/instapro/user-posts/${userId}`,
-    {
-      method: "GET",
-      headers: {
-        Authorization: token,
-      },
-    }
-  )
-    .then((response) => {
-      if (response.status === 401) {
-        throw new Error("Нет авторизации");
-      }
-      return response.json();
-    })
-    .then((data) => {
-      return data.posts;
-    });
-}
+export const getUserPosts = ({ userId, token }) =>
+  request(`${baseHost}/api/v1/${personalKey}/instapro/user-posts/${userId}`, {
+    method: "GET",
+    headers: { Authorization: token },
+  }).then((data) => data.posts);
 
-export function registerUser({ login, password, name, imageUrl }) {
-  return fetch(`${baseHost}/api/user`, {
+export const registerUser = ({ login, password, name, imageUrl }) =>
+  request(`${baseHost}/api/user`, {
     method: "POST",
-    body: JSON.stringify({
-      login,
-      password,
-      name,
-      imageUrl,
-    }),
-  }).then((response) => {
-    if (response.status === 400) {
-      throw new Error("Такой пользователь уже существует");
-    }
-    return response.json();
+    body: JSON.stringify({ login, password, name, imageUrl }),
   });
-}
 
-export function loginUser({ login, password }) {
-  return fetch(`${baseHost}/api/user/login`, {
+export const loginUser = ({ login, password }) =>
+  request(`${baseHost}/api/user/login`, {
     method: "POST",
-    body: JSON.stringify({
-      login,
-      password,
-    }),
-  }).then((response) => {
-    if (response.status === 400) {
-      throw new Error("Неверный логин или пароль");
-    }
-    return response.json();
+    body: JSON.stringify({ login, password }),
   });
-}
 
-export function uploadImage({ file }) {
+export const uploadImage = ({ file }) => {
   const data = new FormData();
   data.append("file", file);
 
-  return fetch(`${baseHost}/api/upload/image`, {
+  return request(`${baseHost}/api/upload/image`, {
     method: "POST",
     body: data,
-  }).then((response) => {
-    return response.json();
   });
-}
+};
 
-export function toggleLike({ postId, token, isLiked }) {
-  const url = isLiked
-    ? `${baseHost}/api/v1/${personalKey}/instapro/${postId}/dislike`
-    : `${baseHost}/api/v1/${personalKey}/instapro/${postId}/like`;
+export const toggleLike = ({ postId, token, isLiked }) => {
+  const url = `${baseHost}/api/v1/${personalKey}/instapro/${postId}/${
+    isLiked ? "dislike" : "like"
+  }`;
 
-  return fetch(url, {
+  return request(url, {
     method: "POST",
-    headers: {
-      Authorization: token,
-    },
-  }).then((response) => {
-    if (!response.ok) {
-      throw new Error("Ошибка при обновлении лайка");
-    }
-    return response.json();
+    headers: { Authorization: token },
   });
-}
+};
 
 export { postsHost };
